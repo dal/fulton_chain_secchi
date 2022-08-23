@@ -42,15 +42,6 @@ i.baseIcon
     margin-right: 6px;
     float: left;
 }
-/*
-.legend i { 
-    width: 18px; 
-    height: 18px; 
-    float: left; 
-    margin-right: 8px; 
-    opacity: 0.7; 
-}
-*/
 /* 
   NOTE: If you add or remove styles to this list, update globals.secchi_floor
   and globals.secchi_ceiling, below.
@@ -130,8 +121,8 @@ i.baseIcon
     function createLegend(map) {
         var legend = L.control({position: 'bottomright'});
         legend.onAdd = function (map) {
-            var div = L.DomUtil.create('div', 'legend');
-            var labels = [];
+            let div = L.DomUtil.create('div', 'legend');
+            let labels = [];
             for (let i=globals.secchi_floor; i <= globals.secchi_ceiling; i++) {
                 for (let j of [0, 5]) {
                     let from = i+j*0.1;
