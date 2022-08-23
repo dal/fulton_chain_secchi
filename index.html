@@ -15,10 +15,53 @@ body {
     top: 0;
     width: 100%;
 }
+.baseIcon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 2rem;
+    display: block;
+    background-color: #FFFFFF;
+    border: 1px solid black;
+}
+.secchi2_0 {background-color: hsl(200 50% 10%);}
+.secchi2_5 {background-color: hsl(200 50% 20%);}
+.secchi3_0 {background-color: hsl(200 50% 25%);}
+.secchi3_5 {background-color: hsl(200 50% 30%);}
+.secchi4_0 {background-color: hsl(200 50% 35%);}
+.secchi4_5 {background-color: hsl(200 50% 40%);}
+.secchi5_0 {background-color: hsl(200 50% 45%);}
+.secchi5_5 {background-color: hsl(200 50% 50%);}
+.secchi6_0 {background-color: hsl(200 50% 55%);}
+.secchi6_5 {background-color: hsl(200 50% 60%);}
+.secchi7_0 {background-color: hsl(200 50% 65%);}
+.secchi7_5 {background-color: hsl(200 50% 70%);}
+.secchi8_0 {background-color: hsl(200 50% 75%);}
+
 </style>
 <script src="./leaflet.js"></script>
 <script type="text/javascript" src="https://stamen-maps.a.ssl.fastly.net/js/tile.stamen.js?v1.3.0"></script>
 <script>
+    var BaseIcon = L.DivIcon.extend({
+        options: { 
+            className: "baseIcon" 
+        }
+    });
+
+    var baseIcon = new BaseIcon();
+    var icons = [];
+    for (let i=2; i < 9; i++) {
+        for (let j of ['0','5']) {
+            let subclass = "secchi"+i+"_"+j;
+            icons.push(new BaseIcon({className: "baseIcon "+subclass}));
+        }
+    }
+
+    function getIcon(measurement) {
+        let floatVar = parseFloat(measurement);
+        let intVar = Math.floor((floatVar - 2) * 2);
+        return icons[Math.min(Math.max(0, intVar), 12)];
+    }
+
     function loadData(map, array) {
         for (var rawPt of array) {
             if (typeof(rawPt.latitude) !== 'string' ||
@@ -33,7 +76,9 @@ body {
                 rawPt.measurement.length === 0) {
                     continue;
             }
-            L.marker([rawPt.latitude, rawPt.longitude]).addTo(map)
+            let curIcon = getIcon(rawPt.measurement);
+            L.marker([rawPt.latitude, rawPt.longitude], {icon: curIcon})
+                .addTo(map)
                 .bindPopup('<b>Reading:</b> ' + rawPt.measurement + ' ' +
                            rawPt.unit +
                            '<br/><b>Time:</b> ' + rawPt.date + ' ' + rawPt.time +
