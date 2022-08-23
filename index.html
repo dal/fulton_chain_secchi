@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Fulton Chain of Lakes 2022 Secchi Disk Measurements</title>
+<link rel="stylesheet" href="./leaflet.css" />
+<style>
+body { 
+    margin: 0;
+    padding: 0;
+}
+#map { 
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    width: 100%;
+}
+</style>
+<script src="./leaflet.js"></script>
+<script type="text/javascript" src="https://stamen-maps.a.ssl.fastly.net/js/tile.stamen.js?v1.3.0"></script>
+<script>
+    function loadData(map, array) {
+        for (var rawPt of array) {
+            if (typeof(rawPt.latitude) !== 'string' ||
+                typeof(rawPt.longitude) !== 'string' ||
+                typeof(rawPt.measurement) !== 'string') 
+            {
+                    continue;
+            }
+
+            if (rawPt.latitude.length === 0 ||
+                rawPt.longitude.length === 0 ||
+                rawPt.measurement.length === 0) {
+                    continue;
+            }
+            L.marker([rawPt.latitude, rawPt.longitude]).addTo(map)
+                .bindPopup('<b>Reading:</b> ' + rawPt.measurement + ' ' +
+                           rawPt.unit +
+                           '<br/><b>Time:</b> ' + rawPt.date + ' ' + rawPt.time +
+                           '<br/><b>ID:</b> ' + rawPt.id);
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var dataUrl = "https://opensheet.elk.sh/17TyvN_Fcr1uzhAxUcZn4adJeSF8GTTDyg2ETFXbpwtw/for_export";
+        var xmlhttp = new XMLHttpRequest();
+
+        // Initialize the map
+        var map = L.map('map').setView([43.74, -74.87], 13);
+        var terrainLayer = new L.StamenTileLayer("terrain");
+        terrainLayer.addTo(map);
+
+        /*
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+        */
+
+        xmlhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+                var myArr = JSON.parse(this.responseText);
+                loadData(map, myArr);
+            }
+        };
+        xmlhttp.open("GET", dataUrl, true);
+        xmlhttp.send();
+    
+    }
+    );
+</script>    
+</head>
+<body>
+<div id="map"></div>
+</body>
+</html>
