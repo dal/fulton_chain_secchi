@@ -4,4 +4,6 @@ Simple map displaying Sechhi disk readings using [Leaflet](https://leafletjs.com
 
 Map tiles are by [Stamen Design](http://maps.stamen.com/#toner/12/37.7706/-122.3782).
 
-Working example [published here](https://dal.github.io/fulton_chain_secchi/).
+[2023 Version of the map](https://dal.github.io/fulton_chain_secchi/map2023.html).
+
+Working example [published here for 2022](https://dal.github.io/fulton_chain_secchi/).
