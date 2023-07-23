@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>Fulton Chain of Lakes 2023 Secchi Disk Measurements</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet.css" />
+<style>
+body { 
+    margin: 0;
+    padding: 0;
+}
+#map { 
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    width: 100%;
+}
+.baseIcon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 2rem;
+    display: block;
+    background-color: #FFFFFF;
+    border: 1px solid black;
+}
+.legend { 
+    padding: 4px 6px; 
+    font: 12px/14px Arial, Helvetica, sans-serif; 
+    background: white; 
+    background: rgba(255,255,255,0.8); 
+    box-shadow: 0 0 15px rgba(0,0,0,0.2); 
+    border-radius: 5px;
+    text-align: left; 
+    line-height: 18px; 
+    color: #555; 
+}
+i.baseIcon
+{
+    width: 10px;
+    height: 10px;
+    margin-top: 2px;
+    margin-right: 6px;
+    float: left;
+}
+/* 
+  NOTE: If you add or remove styles to this list, update globals.secchi_floor
+  and globals.secchi_ceiling, below.
+*/
+.secchi2_0 {background-color: hsl(200 50% 10%);}
+.secchi2_5 {background-color: hsl(200 50% 20%);}
+.secchi3_0 {background-color: hsl(200 50% 25%);}
+.secchi3_5 {background-color: hsl(200 50% 30%);}
+.secchi4_0 {background-color: hsl(200 50% 35%);}
+.secchi4_5 {background-color: hsl(200 50% 40%);}
+.secchi5_0 {background-color: hsl(200 50% 45%);}
+.secchi5_5 {background-color: hsl(200 50% 50%);}
+.secchi6_0 {background-color: hsl(200 50% 55%);}
+.secchi6_5 {background-color: hsl(200 50% 60%);}
+.secchi7_0 {background-color: hsl(200 50% 65%);}
+.secchi7_5 {background-color: hsl(200 50% 70%);}
+.secchi8_0 {background-color: hsl(200 50% 75%);}
+.secchi8_5 {background-color: hsl(200 50% 80%);}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.8.0/leaflet-src.js"></script>
+<script type="text/javascript" src="https://stamen-maps.a.ssl.fastly.net/js/tile.stamen.js?v1.3.0"></script>
+<script>
+    /* Google Sheet Link: https://docs.google.com/spreadsheets/d/1o4voC_VSn01iLw8rcyuWfNsobtIN74IKUA1nlAtcFOU/edit?usp=sharing */
+    var globals = {
+        // The data URL is the OpenSheet JSON endpoint for the Google Sheet data
+        dataUrl: "https://opensheet.elk.sh/1o4voC_VSn01iLw8rcyuWfNsobtIN74IKUA1nlAtcFOU/for_export",
+        icons : [], // This is where we will store all our generated icons
+        secchi_floor : 2, // Minimum secchi value in the color key style list
+        secchi_ceiling : 8 // Maximum secchi integer value, inclusive
+    };
+
+    // Generate the icons for each data point.
+    var BaseIcon = L.DivIcon.extend({
+        options: { 
+            className: "baseIcon" 
+        }
+    });
+
+    var baseIcon = new BaseIcon();
+    for (let i=globals.secchi_floor; i < globals.secchi_ceiling; i++) {
+        for (let j of ['0','5']) {
+            let subclass = "secchi"+i+"_"+j;
+            globals.icons.push(new BaseIcon({className: "baseIcon "+subclass}));
+        }
+    }
+
+    function getIcon(measurement) {
+        let floatVar = parseFloat(measurement);
+        let intVar = Math.floor((floatVar - 2) * 2);
+        return globals.icons[Math.min(Math.max(0, intVar), globals.icons.length-1)];
+    }
+
+    function loadData(map, array) {
+        for (let rawPt of array) {
+            if (typeof(rawPt.latitude) !== 'string' ||
+                typeof(rawPt.longitude) !== 'string' ||
+                typeof(rawPt.measurement) !== 'string') 
+            {
+                    continue;
+            }
+
+            if (rawPt.latitude.length === 0 ||
+                rawPt.longitude.length === 0 ||
+                rawPt.measurement.length === 0) {
+                    continue;
+            }
+            let curIcon = getIcon(rawPt.measurement);
+            L.marker([rawPt.latitude, rawPt.longitude], {icon: curIcon})
+                .addTo(map)
+                .bindPopup('<b>Reading:</b> ' + rawPt.measurement + ' ' +
+                           rawPt.unit +
+                           '<br/><b>Time:</b> ' + rawPt.date + ' ' + rawPt.time +
+                           '<br/><b>ID:</b> ' + rawPt.id);
+        }
+    };
+
+    function createLegend(map) {
+        var legend = L.control({position: 'bottomright'});
+        legend.onAdd = function (map) {
+            let div = L.DomUtil.create('div', 'legend');
+            let labels = [];
+            for (let i=globals.secchi_floor; i <= globals.secchi_ceiling; i++) {
+                for (let j of [0, 5]) {
+                    let from = i+j*0.1;
+                    let to = i+j*0.1+0.5;
+                    let subclass = "secchi"+i+"_"+j;
+                    if (i === globals.secchi_floor && !j) {
+                        labels.push(
+                            '<i class="baseIcon '+subclass + '"></i> &lt; ' + to);
+                    } else if (i === globals.secchi_ceiling && j) {
+                        labels.push(
+                            '<i class="baseIcon '+subclass + '"></i> &gt; ' + from);
+                    } else {
+                        labels.push(
+                            '<i class="baseIcon '+subclass + '"></i> ' + from + '&ndash;' 
+                            + to);
+                    }
+                }
+            }
+
+            div.innerHTML = labels.join('<br>');
+            return div;
+        };
+        legend.addTo(map);
+        return legend;
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var dataUrl = globals.dataUrl;
+        var xmlhttp = new XMLHttpRequest();
+
+        // Initialize the map
+        var map = L.map('map').setView([43.74, -74.87], 13);
+        var terrainLayer = new L.StamenTileLayer("terrain");
+        terrainLayer.addTo(map);
+
+        createLegend(map);
+
+        // Load the Secchi data
+        xmlhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+                var myArr = JSON.parse(this.responseText);
+                loadData(map, myArr);
+            }
+        };
+        xmlhttp.open("GET", dataUrl, true);
+        xmlhttp.send();
+    
+    }
+    );
+</script>    
+</head>
+<body>
+<div id="map"></div>
+</body>
+</html>
