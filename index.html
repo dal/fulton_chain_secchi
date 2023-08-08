@@ -68,6 +68,7 @@ i.baseIcon
     var globals = {
         // The data URL is the OpenSheet JSON endpoint for the Google Sheet data
         dataUrl: "https://opensheet.elk.sh/17TyvN_Fcr1uzhAxUcZn4adJeSF8GTTDyg2ETFXbpwtw/for_export",
+        tileUrl: "https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png",
         icons : [], // This is where we will store all our generated icons
         secchi_floor : 2, // Minimum secchi value in the color key style list
         secchi_ceiling : 8 // Maximum secchi integer value, inclusive
@@ -155,7 +156,11 @@ i.baseIcon
 
         // Initialize the map
         var map = L.map('map').setView([43.74, -74.87], 13);
-        var terrainLayer = new L.StamenTileLayer("terrain");
+        var terrainLayer = new L.TileLayer(globals.tileUrl, {
+                scheme: "xyz",
+                maxZoom: 19,
+                attribution: globals.attribution
+            });
         terrainLayer.addTo(map);
 
         createLegend(map);
